@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3348;
+      --accent: #4f7cff; --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+      --text: #e8eaf0; --muted: #6b7280;
+      --font: "IBM Plex Sans Thai", sans-serif; --mono: "IBM Plex Mono", monospace;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { display: flex; align-items: center; gap: 12px; padding: 16px 32px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-title { font-size: 17px; font-weight: 600; }
+    .nav-badge { margin-left: auto; font-size: 11px; font-family: var(--mono); background: var(--surface2); border: 1px solid var(--border); color: var(--accent); padding: 3px 10px; border-radius: 20px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--font); font-size: 14px; transition: border-color 0.2s; outline: none; }
+    input::placeholder { color: var(--muted); }
+    input:focus { border-color: var(--accent); }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #3d6ae0; transform: translateY(-1px); }
+    .btn-warning { background: var(--yellow); color: #000; font-size: 12px; padding: 6px 12px; }
+    .btn-danger { background: var(--red); color: #fff; font-size: 12px; padding: 6px 12px; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; }
+    .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; font-family: var(--font); cursor: pointer; transition: all 0.2s; }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .filter-btn.warn.active { background: var(--yellow); border-color: var(--yellow); color: #000; }
+    .total-count { margin-left: auto; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    td { padding: 14px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    .td-sku { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .td-qty { font-family: var(--mono); font-weight: 600; font-size: 15px; }
+    .td-actions { display: flex; gap: 8px; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .badge-ok { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-low { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 360px; animation: fadeUp 0.25s ease; }
+    .modal h3 { font-size: 16px; margin-bottom: 6px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .modal-input-row { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+    .modal-input-row input { flex: 1; text-align: center; font-family: var(--mono); font-size: 16px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; display: none; z-index: 300; max-width: 320px; }
+    #toast.success { border-left: 3px solid var(--green); }
+    #toast.error { border-left: 3px solid var(--red); }
+    .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+<nav>
+  <span style="font-size:22px">📦</span>
+  <span class="nav-title">Inventory Management System</span>
+  <span class="nav-badge">localhost:3000</span>
+</nav>
+<main>
+  <div class="card">
+    <div class="card-title">เพิ่มสินค้าใหม่</div>
+    <div class="form-grid">
+      <input id="f-name" placeholder="ชื่อสินค้า *" />
+      <input id="f-sku" placeholder="รหัสสินค้า (SKU) *" />
+      <input id="f-zone" placeholder="โซนจัดเก็บ เช่น A1 *" />
+      <input id="f-qty" type="number" placeholder="จำนวน (ค่าเริ่มต้น 0)" min="0" />
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn btn-primary" onclick="addProduct()">เพิ่มสินค้า</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">รายการสินค้าในคลัง</div>
+    <div class="filter-row">
+      <button class="filter-btn active" id="btn-all" onclick="setFilter('all')">ทั้งหมด</button>
+      <button class="filter-btn warn" id="btn-low" onclick="setFilter('low')">ใกล้หมดสต็อก (10 ชิ้น)</button>
+      <span class="total-count" id="count-label"></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ชื่อสินค้า</th><th>SKU</th><th>โซน</th><th>จำนวน</th><th>สถานะ</th><th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="product-table"></tbody>
+    </table>
+    <div id="empty-state" class="empty" style="display:none">ไม่มีสินค้าในระบบ</div>
+  </div>
+</main>
+<div class="modal-overlay" id="adjust-modal">
+  <div class="modal">
+    <h3>ปรับจำนวนสต็อก</h3>
+    <p id="adjust-product-name"></p>
+    <div class="modal-input-row">
+      <button class="btn btn-danger" onclick="setChange(-1)" style="font-size:18px;padding:6px 14px">-</button>
+      <input id="adjust-change" type="number" value="0" />
+      <button class="btn btn-primary" onclick="setChange(1)" style="font-size:18px;padding:6px 14px">+</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="submitAdjust()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+  var currentFilter = 'all';
+  var adjustId = null;
+
+  function loadProducts() {
+    var url = currentFilter === 'low' ? '/inventory?low_stock=true' : '/inventory';
+    fetch(url)
+      .then(function(res) { return res.json(); })
+      .then(function(data) { renderTable(data); })
+      .catch(function() { showToast('ไม่สามารถโหลดข้อมูลได้', 'error'); });
+  }
+
+  function renderTable(products) {
+    var tbody = document.getElementById('product-table');
+    var empty = document.getElementById('empty-state');
+    document.getElementById('count-label').textContent = 'ทั้งหมด ' + products.length + ' รายการ';
+    if (products.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = products.map(function(p) {
+      var badge = p.quantity <= 10
+        ? '<span class="badge badge-low">ใกล้หมด</span>'
+        : '<span class="badge badge-ok">ปกติ</span>';
+      return '<tr>'
+        + '<td><strong>' + p.name + '</strong></td>'
+        + '<td class="td-sku">' + p.sku + '</td>'
+        + '<td>' + p.zone + '</td>'
+        + '<td class="td-qty">' + p.quantity + '</td>'
+        + '<td>' + badge + '</td>'
+        + '<td class="td-actions">'
+        + '<button class="btn btn-warning" onclick="openAdjust(\'' + p.id + '\',\'' + p.name + '\')">ปรับสต็อก</button>'
+        + '<button class="btn btn-danger" onclick="deleteProduct(\'' + p.id + '\',\'' + p.name + '\')">ลบ</button>'
+        + '</td></tr>';
+    }).join('');
+  }
+
+  function addProduct() {
+    var name = document.getElementById('f-name').value.trim();
+    var sku = document.getElementById('f-sku').value.trim();
+    var zone = document.getElementById('f-zone').value.trim();
+    var qty = document.getElementById('f-qty').value;
+    if (!name || !sku || !zone) { showToast('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+    fetch('/inventory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, sku: sku, zone: zone, quantity: qty ? parseInt(qty) : 0 })
+    }).then(function(res) {
+      if (res.ok) {
+        showToast('เพิ่มสินค้า ' + name + ' สำเร็จ', 'success');
+        document.getElementById('f-name').value = '';
+        document.getElementById('f-sku').value = '';
+        document.getElementById('f-zone').value = '';
+        document.getElementById('f-qty').value = '';
+        loadProducts();
+      } else {
+        res.json().then(function(err) { showToast(err.error || 'เกิดข้อผิดพลาด', 'error'); });
+      }
+    });
+  }
+
+  function openAdjust(id, name) {
+    adjustId = id;
+    document.getElementById('adjust-product-name').textContent = 'สินค้า: ' + name;
+    document.getElementById('adjust-change').value = 0;
+    document.getElementById('adjust-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('adjust-modal').classList.remove('open');
+    adjustId = null;
+  }
+
+  function setChange(d) {
+    var inp = document.getElementById('adjust-change');
+    inp.value = parseInt(inp.value || 0) + d;
+  }
+
+  function submitAdjust() {
+    var change = parseInt(document.getElementById('adjust-change').value);
+    if (change === 0) { showToast('กรุณาระบุจำนวน', 'error'); return; }
+    fetch('/inventory/' + adjustId + '/adjust', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ change: change })
+    }).then(function(res) {
+      if (res.ok) {
+        showToast('ปรับสต็อก ' + (change > 0 ? '+' : '') + change + ' ชิ้น สำเร็จ', 'success');
+        closeModal();
+        loadProducts();
+      } else {
+        res.json().then(function(err) { showToast(err.error || 'เกิดข้อผิดพลาด', 'error'); });
+      }
+    });
+  }
+
+  function deleteProduct(id, name) {
+    if (!confirm('ต้องการลบ ' + name + ' ออกจากระบบ?')) return;
+    fetch('/inventory/' + id, { method: 'DELETE' })
+      .then(function(res) {
+        if (res.ok) {
+          showToast('ลบสินค้า ' + name + ' สำเร็จ', 'success');
+          loadProducts();
+        } else {
+          res.json().then(function(err) { showToast(err.error || 'เกิดข้อผิดพลาด', 'error'); });
+        }
+      });
+  }
+
+  function setFilter(f) {
+    currentFilter = f;
+    document.getElementById('btn-all').classList.toggle('active', f === 'all');
+    document.getElementById('btn-low').classList.toggle('active', f === 'low');
+    loadProducts();
+  }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = type;
+    t.style.display = 'block';
+    setTimeout(function() { t.style.display = 'none'; }, 3000);
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>
