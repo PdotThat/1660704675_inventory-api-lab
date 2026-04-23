@@ -3,10 +3,20 @@
 REST API สำหรับระบบจัดการสินค้าคงคลัง สร้างด้วย Elysia + Bun + Prisma + Supabase
 
 ## Tech Stack
-- **Runtime:** Bun
-- **Framework:** Elysia
-- **ORM:** Prisma
-- **Database:** PostgreSQL (Supabase)
+
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Bun |
+| Framework | Elysia |
+| ORM | Prisma |
+| Database | PostgreSQL (Supabase) |
+
+## Features
+
+- ดูรายการสินค้าทั้งหมด พร้อมกรองสินค้าใกล้หมดสต็อก (≤ 10 ชิ้น)
+- เพิ่ม / ปรับจำนวน / ลบสินค้า
+- Frontend UI พร้อมใช้งาน ที่ `/`
+- Swagger UI สำหรับทดสอบ API ที่ `/swagger`
 
 ## Setup
 
@@ -31,7 +41,8 @@ bunx prisma db push
 bun run dev
 ```
 
-เปิด http://localhost:3000/swagger เพื่อทดสอบ API
+- Frontend: http://localhost:3000
+- Swagger UI: http://localhost:3000/swagger
 
 ## API Endpoints
 
@@ -42,3 +53,9 @@ bun run dev
 | POST | /inventory | เพิ่มสินค้าใหม่ |
 | PATCH | /inventory/:id/adjust | ปรับจำนวนสต็อก |
 | DELETE | /inventory/:id | ลบสินค้า (quantity ต้องเป็น 0) |
+
+## Business Rules
+
+- SKU ต้องไม่ซ้ำกัน
+- จำนวนสต็อกติดลบไม่ได้
+- ลบสินค้าได้เฉพาะเมื่อ quantity = 0 เท่านั้น
